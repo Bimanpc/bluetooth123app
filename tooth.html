@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluetooth Device Scanner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+    }
+    #deviceList {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bluetooth Device Scanner</h1>
+  <button id="scanButton">Scan for Bluetooth Devices</button>
+  
+  <ul id="deviceList"></ul>
+
+  <script>
+    // JavaScript code to handle Bluetooth scanning and connecting
+    const scanButton = document.getElementById('scanButton');
+    const deviceList = document.getElementById('deviceList');
+
+    scanButton.addEventListener('click', async () => {
+      try {
+        // Request Bluetooth device
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['battery_service'] // You can specify specific services
+        });
+
+        // Display the device name
+        const listItem = document.createElement('li');
+        listItem.textContent = `Device Name: ${device.name} (ID: ${device.id})`;
+        deviceList.appendChild(listItem);
+
+        // Optionally connect to the device and retrieve services
+        const server = await device.gatt.connect();
+        console.log('Connected to GATT Server', server);
+
+        // Example: Read the Battery Level from the Battery Service
+        const service = await server.getPrimaryService('battery_service');
+        const characteristic = await service.getCharacteristic('battery_level');
+        const batteryLevel = await characteristic.readValue();
+
+        const batteryPercentage = batteryLevel.getUint8(0);
+        console.log(`Battery Level: ${batteryPercentage}%`);
+
+        const batteryItem = document.createElement('li');
+        batteryItem.textContent = `Battery Level: ${batteryPercentage}%`;
+        deviceList.appendChild(batteryItem);
+
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+  </script>
+  
+</body>
+</html>
